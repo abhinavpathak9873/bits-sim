@@ -2,7 +2,7 @@ import math
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Sequence, Tuple
+from typing import Any, List, Sequence, Tuple
 
 import rclpy
 import yaml
@@ -36,11 +36,14 @@ class MovingActor:
     kind: str
 
 
-def _load_scenario(world: str) -> dict:
+def _load_scenario(world: str) -> dict[str, Any]:
     share = Path(get_package_share_directory('dynamic_nav_worlds'))
     path = share / 'config' / 'scenarios' / f'{world}.yaml'
     with path.open('r', encoding='utf-8') as stream:
-        return yaml.safe_load(stream)
+        scenario = yaml.safe_load(stream)
+    if not isinstance(scenario, dict):
+        raise ValueError(f'Scenario config {path} must contain a YAML mapping')
+    return scenario
 
 
 def _boxless_cylinder_sdf(name: str, radius: float, height: float, color: str) -> str:
@@ -190,20 +193,20 @@ class ActorManager(Node):
             self.spawned.add(actor.name)
 
     def _spawn_done(self, name: str, future) -> None:
-        try:
-            response = future.result()
-        except Exception as exc:
-            self.get_logger().warn(f'Failed to spawn {name}: {exc}')
+        spawn_error = future.exception()
+        if spawn_error is not None:
+            self.get_logger().warn(f'Failed to spawn {name}: {spawn_error}')
             self.spawned.discard(name)
             return
-        if response.success:
+        spawn_reply = future.result()
+        if spawn_reply.success:
             self.event_pub.publish(String(data=f'actor_spawned:{name}'))
             if len(self.spawned) == len(self.actors):
                 self.get_logger().info(f'Spawned {len(self.spawned)} dynamic actors.')
                 self.destroy_timer(self.spawn_timer)
         else:
             self.spawned.discard(name)
-            self.get_logger().warn(f'Spawn rejected for {name}: {response.status_message}')
+            self.get_logger().warn(f'Spawn rejected for {name}: {spawn_reply.status_message}')
 
     def _tick(self) -> None:
         if not self.actors or len(self.spawned) != len(self.actors):
@@ -307,7 +310,7 @@ def main(args: Sequence[str] | None = None) -> None:
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass
+        return
     finally:
         node.destroy_node()
         if rclpy.ok():

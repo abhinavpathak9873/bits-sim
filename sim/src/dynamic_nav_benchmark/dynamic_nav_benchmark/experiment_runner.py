@@ -2,11 +2,12 @@ import argparse
 import csv
 import json
 import math
+import shlex
 import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import Any, List, Optional, Sequence
 
 import matplotlib
 matplotlib.use('Agg')
@@ -48,7 +49,6 @@ class BenchmarkNode(Node):
         self.metrics = Metrics()
         self.goal = config['goals'][0]
         self.start_time = self.get_clock().now()
-        self.last_pose = None
         self.success = False
         self.timeout_s = float(config.get('timeout_s', 180.0))
         self.goal_tolerance_m = float(config.get('goal_tolerance_m', 0.45))
@@ -110,12 +110,22 @@ class BenchmarkNode(Node):
         self.metrics.events.append(msg.data)
 
 
-def run_ros_trial(config: dict, run_id: str, output_dir: Path) -> dict:
+def _launch_command(command: str | Sequence[str]) -> subprocess.Popen:
+    if isinstance(command, str):
+        argv = shlex.split(command)
+    else:
+        argv = list(command)
+    if not argv:
+        raise ValueError('algorithm_launch cannot be empty')
+    return subprocess.Popen(argv)
+
+
+def run_ros_trial(config: dict[str, Any], run_id: str, output_dir: Path) -> dict:
     command = config.get('algorithm_launch')
     process: Optional[subprocess.Popen] = None
     bag_process: Optional[subprocess.Popen] = None
     if command:
-        process = subprocess.Popen(command, shell=True)
+        process = _launch_command(command)
     if config.get('record', False):
         bag_dir = output_dir / run_id / 'bags' / 'topics'
         bag_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -257,11 +267,16 @@ def write_outputs(config: dict, run_id: str, output_dir: Path, metrics: Metrics,
     return summary
 
 
-def load_config(path: Path) -> dict:
+def load_config(path: Path) -> dict[str, Any]:
     with path.open('r', encoding='utf-8') as stream:
         config = yaml.safe_load(stream)
+    if not isinstance(config, dict):
+        raise ValueError(f'Experiment config {path} must contain a YAML mapping')
     if 'goals' not in config or not config['goals']:
         raise ValueError('Experiment config must define at least one goal')
+    launch_command = config.get('algorithm_launch')
+    if launch_command is not None and not isinstance(launch_command, (str, list, tuple)):
+        raise ValueError('algorithm_launch must be a shell-style string or an argument list')
     return config
 
 

@@ -64,11 +64,11 @@ class GoalMarker(Node):
         spawn_request.initial_pose = pose
         spawn_request.reference_frame = 'world'
         future = self.spawn_client.call_async(spawn_request)
-        response = self._wait_future(future, timeout_s=4.0)
-        if response is not None and getattr(response, 'success', False):
+        spawn_reply = self._wait_future(future, timeout_s=4.0)
+        if spawn_reply is not None and getattr(spawn_reply, 'success', False):
             self.get_logger().info(f'Goal marker shown at x={pose.position.x:.2f}, y={pose.position.y:.2f}')
-        elif response is not None:
-            self.get_logger().warning(f'Goal marker spawn failed: {response.status_message}')
+        elif spawn_reply is not None:
+            self.get_logger().warning(f'Goal marker spawn failed: {spawn_reply.status_message}')
 
     @staticmethod
     def _wait_future(future, timeout_s: float):

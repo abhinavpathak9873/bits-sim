@@ -76,7 +76,7 @@ class BaselineController(Node):
         return Twist()
 
     def on_new_goal(self) -> None:
-        pass
+        return None
 
     def goal_vector(self) -> tuple[float, float, float, float]:
         if self.goal is None or self.pose is None:
@@ -114,8 +114,6 @@ class BaselineController(Node):
 
 
 class GoToGoalController(BaselineController):
-    """Pure proportional go-to-goal baseline with no obstacle avoidance."""
-
     def __init__(self) -> None:
         super().__init__('baseline_go_to_goal')
 
@@ -133,8 +131,6 @@ class GoToGoalController(BaselineController):
 
 
 class Bug2Controller(BaselineController):
-    """Bug-style baseline: head to goal, follow left wall when blocked."""
-
     def __init__(self) -> None:
         super().__init__('baseline_bug2')
         self.declare_parameter('obstacle_enter_m', 0.85)
@@ -174,8 +170,6 @@ class Bug2Controller(BaselineController):
 
 
 class VFHController(BaselineController):
-    """Lightweight vector-field histogram style local planner."""
-
     def __init__(self) -> None:
         super().__init__('baseline_vfh')
         self.declare_parameter('influence_distance_m', 2.1)
@@ -218,8 +212,6 @@ class VFHController(BaselineController):
 
 
 class FollowGapController(BaselineController):
-    """Follow-the-gap lidar baseline for local obstacle avoidance."""
-
     def __init__(self) -> None:
         super().__init__('baseline_follow_gap')
         self.declare_parameter('free_distance_m', 1.15)
@@ -240,11 +232,11 @@ class FollowGapController(BaselineController):
         free_distance = float(self.get_parameter('free_distance_m').value)
         bubble = float(self.get_parameter('bubble_radius_rad').value)
         ranges = _finite_ranges(self.scan)
-        usable = [item for item in ranges if abs(item[0]) <= 2.35]
+        usable = [scan_point for scan_point in ranges if abs(scan_point[0]) <= 2.35]
         if not usable:
             return cmd
 
-        nearest_angle, nearest_distance = min(usable, key=lambda item: item[1])
+        nearest_angle, nearest_distance = min(usable, key=lambda scan_point: scan_point[1])
         gaps = []
         current = []
         for angle, obstacle_distance in usable:
@@ -277,8 +269,6 @@ class FollowGapController(BaselineController):
 
 
 class AStarController(BaselineController):
-    """Grid A* global planner over scenario static obstacles plus waypoint following."""
-
     def __init__(self) -> None:
         super().__init__('baseline_astar')
         self.declare_parameter('world', 'mall')
@@ -345,8 +335,13 @@ class AStarController(BaselineController):
         else:
             bounds = (-14.2, 14.2, -10.2, 10.2)
         obstacles = [
-            {'x': float(item['x']), 'y': float(item['y']), 'sx': float(item['sx']), 'sy': float(item['sy'])}
-            for item in scenario.get('static_obstacles', [])
+            {
+                'x': float(obstacle['x']),
+                'y': float(obstacle['y']),
+                'sx': float(obstacle['sx']),
+                'sy': float(obstacle['sy']),
+            }
+            for obstacle in scenario.get('static_obstacles', [])
         ]
         return bounds, obstacles
 
@@ -406,10 +401,10 @@ class AStarController(BaselineController):
         return False
 
 
-def _sample_scan(values: Iterable[tuple[float, float]], stride: int) -> Iterable[tuple[float, float]]:
-    for index, value in enumerate(values):
+def _sample_scan(scan_points: Iterable[tuple[float, float]], stride: int) -> Iterable[tuple[float, float]]:
+    for index, scan_point in enumerate(scan_points):
         if index % stride == 0:
-            yield value
+            yield scan_point
 
 
 def _spin(node: Node, args: Sequence[str] | None = None) -> None:

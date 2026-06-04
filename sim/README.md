@@ -8,6 +8,8 @@ The most reliable local path right now is the Gazebo Classic safe runner for
 TurtleBot3. TurtleBot4/Ignition support is scaffolded through the official
 TurtleBot4 simulation packages.
 
+Agent and contributor coding rules live in `AGENTS.md`.
+
 ## Packages
 
 - `dynamic_nav_worlds`: world files, scenario YAML, maps, and shared assets.
@@ -276,6 +278,161 @@ Available baseline experiment configs:
 To benchmark your own algorithm, copy one of those YAML files and replace
 `algorithm_launch` with your launch command. Keep the same world, seed, crowd
 density, robot, start, and goal when comparing algorithms.
+
+## Integrating Your Own Algorithm
+
+Your planner/controller should behave like a black-box ROS node. It does not
+need to be a Nav2 plugin.
+
+### Required Inputs
+
+Subscribe to the topics you need from this contract:
+
+- `/goal_pose`: `geometry_msgs/msg/PoseStamped`
+- `/odom`: `nav_msgs/msg/Odometry`
+- `/scan`: `sensor_msgs/msg/LaserScan`
+- `/tf`: `tf2_msgs/msg/TFMessage`
+- `/tf_static`: `tf2_msgs/msg/TFMessage`
+- `/map`: `nav_msgs/msg/OccupancyGrid`, only when you launch a map source
+
+Most baseline-style algorithms only need `/goal_pose`, `/odom`, and `/scan`.
+
+Topic meanings:
+
+- `/goal_pose` is the current navigation target. The safe simulator also draws this as a Gazebo marker.
+- `/odom` gives the robot pose and velocity in the odometry frame.
+- `/scan` gives lidar obstacle ranges.
+- `/tf` and `/tf_static` provide frame transforms if your algorithm uses TF.
+
+### Required Output
+
+Publish velocity commands to:
+
+- `/cmd_vel`: `geometry_msgs/msg/Twist`
+
+Use:
+
+- `linear.x` for forward/backward velocity in meters per second.
+- `angular.z` for yaw rate in radians per second.
+
+Do not run multiple algorithms that publish `/cmd_vel` at the same time unless
+you intentionally add a command multiplexer.
+
+### Frames
+
+Use these assumptions unless your launch file remaps them:
+
+- Goal frame: `map`
+- Robot odometry frame: from `/odom`
+- Robot base frame: available through `/tf`, typically `base_footprint` or `base_link`
+- Lidar frame: available through `/tf`
+
+The default examples publish goals with `header.frame_id: map`. If your
+algorithm only works in odom, transform the goal through TF or use the current
+sim setup consistently for all compared algorithms.
+
+### Launch Contract
+
+Your algorithm should be launchable with one command, for example:
+
+```bash
+ros2 launch my_nav_package my_algorithm.launch.py
+```
+
+That launch file should start exactly the nodes needed by your algorithm and
+should publish only one final command stream to `/cmd_vel`.
+
+Recommended configurable parameters:
+
+- `cmd_vel_topic`
+- `goal_topic`
+- `odom_topic`
+- `scan_topic`
+- `max_linear_speed`
+- `max_angular_speed`
+
+### Manual Test Workflow
+
+Terminal 1, start the sim:
+
+```bash
+cd /sim
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+DISPLAY=:0 GUI=true WORLD=mall ROBOT=tb3_waffle_pi HUMAN_SCALE=0.9 \
+  DYNAMIC_OBSTACLES=true CROWD_DENSITY=low SPEED_PROFILE=medium MAX_ACTORS=8 \
+  /sim/install/dynamic_nav_bringup/share/dynamic_nav_bringup/scripts/safe_classic_sim.sh
+```
+
+Terminal 2, start your algorithm:
+
+```bash
+cd /sim
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+ros2 launch my_nav_package my_algorithm.launch.py
+```
+
+Terminal 3, send a goal:
+
+```bash
+cd /sim
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+ros2 topic pub --once /goal_pose geometry_msgs/msg/PoseStamped \
+  "{header: {frame_id: map}, pose: {position: {x: 10.5, y: 6.0, z: 0.0}, orientation: {w: 1.0}}}"
+```
+
+### Benchmark Config
+
+Create a YAML file by copying one baseline experiment:
+
+```bash
+cp src/dynamic_nav_benchmark/experiments/baseline_vfh_mall.yaml \
+  src/dynamic_nav_benchmark/experiments/my_algorithm_mall.yaml
+```
+
+Change only the identity and launch command first:
+
+```yaml
+run_id: my_algorithm_mall
+algorithm_launch: ros2 launch my_nav_package my_algorithm.launch.py
+```
+
+Keep these fields unchanged when comparing against baselines:
+
+- `world`
+- `backend`
+- `robot`
+- `seed`
+- `crowd_density`
+- `dynamic_obstacles`
+- `robot_start`
+- `goals`
+- `timeout_s`
+- `goal_tolerance_m`
+
+Run the benchmark:
+
+```bash
+ros2 launch dynamic_nav_bringup benchmark.launch.py \
+  experiment:=/sim/src/dynamic_nav_benchmark/experiments/my_algorithm_mall.yaml \
+  backend:=classic world:=mall robot:=tb3_waffle_pi gui:=false
+```
+
+### Integration Checklist
+
+- Your node receives `/goal_pose`.
+- Your node receives `/odom`.
+- Your node receives `/scan` if it does obstacle avoidance.
+- Your node publishes `/cmd_vel`.
+- Only one `/cmd_vel` publisher is active during a run.
+- The robot stops when it reaches the goal tolerance.
+- Your launch command works from a freshly sourced `/sim` terminal.
+- Your benchmark YAML uses the same seed/world/goal as the baseline you compare against.
 
 Example experiment configs:
 

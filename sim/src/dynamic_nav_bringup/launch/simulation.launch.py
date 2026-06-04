@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
