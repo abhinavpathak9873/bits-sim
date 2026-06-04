@@ -10,6 +10,7 @@
 
   <exec_depend>dynamic_nav_actors</exec_depend>
   <exec_depend>dynamic_nav_benchmark</exec_depend>
+  <exec_depend>dynamic_nav_gazebo_plugins</exec_depend>
   <exec_depend>dynamic_nav_worlds</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>launch</exec_depend>

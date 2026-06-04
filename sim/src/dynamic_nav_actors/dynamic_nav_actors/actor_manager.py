@@ -10,6 +10,7 @@ from ament_index_python.packages import get_package_share_directory
 from gazebo_msgs.msg import EntityState
 from gazebo_msgs.srv import SetEntityState, SpawnEntity
 from geometry_msgs.msg import Pose
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
 
@@ -27,6 +28,12 @@ class MovingActor:
     color: str
     segment: int
     progress: float
+    sway_phase: float
+    sway_amplitude: float
+    sway_rate: float
+    bob_amplitude: float
+    speed_phase: float
+    kind: str
 
 
 def _load_scenario(world: str) -> dict:
@@ -61,8 +68,10 @@ class ActorManager(Node):
         self.declare_parameter('crowd_density', 'medium')
         self.declare_parameter('dynamic_obstacles', True)
         self.declare_parameter('seed', 1)
-        self.declare_parameter('update_rate_hz', 2.0)
+        self.declare_parameter('update_rate_hz', 10.0)
         self.declare_parameter('max_actors', 4)
+        self.declare_parameter('control_mode', 'spawn_service')
+        self.declare_parameter('speed_profile', 'low')
 
         self.world = self.get_parameter('world').value
         self.backend = self.get_parameter('backend').value
@@ -71,11 +80,13 @@ class ActorManager(Node):
         self.seed = int(self.get_parameter('seed').value)
         self.update_period = 1.0 / float(self.get_parameter('update_rate_hz').value)
         self.max_actors = int(self.get_parameter('max_actors').value)
+        self.control_mode = self.get_parameter('control_mode').value
+        self.speed_profile = self.get_parameter('speed_profile').value
         self.random = random.Random(self.seed)
         self.scenario = _load_scenario(self.world)
         self.actors: List[MovingActor] = []
         self.spawned: set[str] = set()
-        self.move_index = 0
+        self.sim_time = 0.0
 
         self.event_pub = self.create_publisher(String, '/benchmark/events', 10)
         self.spawn_client = self.create_client(SpawnEntity, '/spawn_entity')
@@ -92,7 +103,11 @@ class ActorManager(Node):
             return
 
         self._prepare_actors()
-        self.spawn_timer = self.create_timer(0.5, self._spawn_once)
+        if self.control_mode == 'existing_models':
+            self.spawned = {actor.name for actor in self.actors}
+            self.get_logger().info(f'Controlling {len(self.spawned)} preloaded crowd models.')
+        else:
+            self.spawn_timer = self.create_timer(0.5, self._spawn_once)
         self.create_timer(self.update_period, self._tick)
 
     def _prepare_actors(self) -> None:
@@ -101,35 +116,58 @@ class ActorManager(Node):
             raise ValueError(f'Unknown crowd_density={self.crowd_density!r}')
         pedestrian_routes = self.scenario['pedestrian_routes']
         cart_routes = self.scenario['cart_routes']
-        for index in range(int(profile['pedestrians'])):
-            if len(self.actors) >= self.max_actors:
-                break
+        speed_scale = {
+            'static': 0.0,
+            'low': 0.55,
+            'medium': 1.0,
+            'mid': 1.0,
+            'high': 1.55,
+        }.get(self.speed_profile)
+        if speed_scale is None:
+            raise ValueError(f'Unknown speed_profile={self.speed_profile!r}')
+        cart_limit = min(int(profile['carts']), max(0, self.max_actors // 4))
+        if int(profile['carts']) > 0 and self.max_actors >= 4:
+            cart_limit = max(1, cart_limit)
+        pedestrian_limit = max(0, self.max_actors - cart_limit)
+        for index in range(min(int(profile['pedestrians']), pedestrian_limit)):
             route = [tuple(p) for p in self.random.choice(pedestrian_routes)]
             if self.random.random() < 0.5:
                 route = list(reversed(route))
+            progress = ((index % 8) / 8.0 + self.random.uniform(-0.025, 0.025)) % 1.0
             self.actors.append(MovingActor(
                 name=f'pedestrian_{index:03d}',
                 route=route,
-                speed=self.random.uniform(0.55, 1.25),
+                speed=self.random.uniform(0.55, 1.25) * speed_scale,
                 radius=self.random.uniform(0.18, 0.27),
                 height=self.random.uniform(1.45, 1.85),
                 color='0.20 0.32 0.75 1',
                 segment=self.random.randrange(max(1, len(route) - 1)),
-                progress=self.random.random(),
+                progress=progress,
+                sway_phase=self.random.uniform(0.0, math.tau),
+                sway_amplitude=self.random.uniform(0.035, 0.11),
+                sway_rate=self.random.uniform(0.8, 1.6),
+                bob_amplitude=self.random.uniform(0.006, 0.018),
+                speed_phase=self.random.uniform(0.0, math.tau),
+                kind='pedestrian',
             ))
-        for index in range(int(profile['carts'])):
-            if len(self.actors) >= self.max_actors:
-                break
+        for index in range(cart_limit):
             route = [tuple(p) for p in cart_routes[index % len(cart_routes)]]
+            progress = ((index % 4) / 4.0 + 0.12) % 1.0
             self.actors.append(MovingActor(
                 name=f'service_cart_{index:03d}',
                 route=route,
-                speed=self.random.uniform(0.35, 0.75),
+                speed=self.random.uniform(0.35, 0.75) * speed_scale,
                 radius=0.42,
                 height=0.75,
                 color='0.85 0.58 0.16 1',
                 segment=self.random.randrange(max(1, len(route) - 1)),
-                progress=self.random.random(),
+                progress=progress,
+                sway_phase=self.random.uniform(0.0, math.tau),
+                sway_amplitude=self.random.uniform(0.0, 0.035),
+                sway_rate=self.random.uniform(0.25, 0.55),
+                bob_amplitude=0.0,
+                speed_phase=self.random.uniform(0.0, math.tau),
+                kind='cart',
             ))
         self.get_logger().info(
             f'Prepared {len(self.actors)} actors for {self.world}/{self.crowd_density} seed={self.seed}'
@@ -168,19 +206,22 @@ class ActorManager(Node):
             self.get_logger().warn(f'Spawn rejected for {name}: {response.status_message}')
 
     def _tick(self) -> None:
-        if not self.actors or len(self.spawned) != len(self.actors) or not self.state_client.service_is_ready():
+        if not self.actors or len(self.spawned) != len(self.actors):
+            return
+        if self.speed_profile == 'static':
+            return
+        self.sim_time += self.update_period
+        self._advance_crowd(self.update_period)
+        if not self.state_client.service_is_ready():
             return
         for actor in self.actors:
-            self._advance(actor, self.update_period)
-        actor = self.actors[self.move_index % len(self.actors)]
-        self.move_index += 1
-        x, y, yaw = self._actor_pose(actor)
-        request = SetEntityState.Request()
-        request.state = EntityState()
-        request.state.name = actor.name
-        request.state.pose = self._pose(x, y, actor.height / 2.0, yaw)
-        request.state.reference_frame = 'world'
-        self.state_client.call_async(request)
+            x, y, yaw = self._actor_pose(actor, include_motion=True)
+            request = SetEntityState.Request()
+            request.state = EntityState()
+            request.state.name = actor.name
+            request.state.pose = self._pose(x, y, self._actor_z(actor), yaw)
+            request.state.reference_frame = 'world'
+            self.state_client.call_async(request)
 
     def _advance(self, actor: MovingActor, dt: float) -> None:
         start = actor.route[actor.segment]
@@ -190,19 +231,64 @@ class ActorManager(Node):
             actor.segment = (actor.segment + 1) % len(actor.route)
             actor.progress = 0.0
             return
-        actor.progress += actor.speed * dt / distance
+        speed_modulation = 1.0 + 0.12 * math.sin(self.sim_time * 0.75 + actor.speed_phase)
+        actor.progress += actor.speed * speed_modulation * dt / distance
         while actor.progress >= 1.0:
             actor.progress -= 1.0
             actor.segment = (actor.segment + 1) % len(actor.route)
 
-    def _actor_pose(self, actor: MovingActor) -> Tuple[float, float, float]:
+    def _advance_crowd(self, dt: float) -> None:
+        for actor in self.actors:
+            old_segment = actor.segment
+            old_progress = actor.progress
+            self._advance(actor, dt)
+            x, y, _ = self._actor_pose(actor, include_motion=True)
+            if self._blocked_by_static(actor, x, y) or self._blocked_by_actor(actor, x, y):
+                actor.segment = old_segment
+                actor.progress = old_progress
+
+    def _blocked_by_static(self, actor: MovingActor, x: float, y: float) -> bool:
+        for obstacle in self.scenario.get('static_obstacles', []):
+            clearance = actor.radius + 0.18
+            half_x = float(obstacle['sx']) / 2.0 + clearance
+            half_y = float(obstacle['sy']) / 2.0 + clearance
+            if abs(x - float(obstacle['x'])) <= half_x and abs(y - float(obstacle['y'])) <= half_y:
+                return True
+        return False
+
+    def _blocked_by_actor(self, actor: MovingActor, x: float, y: float) -> bool:
+        for other in self.actors:
+            if other.name == actor.name:
+                continue
+            ox, oy, _ = self._actor_pose(other, include_motion=True)
+            min_distance = actor.radius + other.radius + 0.30
+            if math.hypot(x - ox, y - oy) < min_distance:
+                return True
+        return False
+
+    def _actor_pose(self, actor: MovingActor, include_motion: bool = False) -> Tuple[float, float, float]:
         start = actor.route[actor.segment]
         end = actor.route[(actor.segment + 1) % len(actor.route)]
         t = actor.progress
         x = start[0] + (end[0] - start[0]) * t
         y = start[1] + (end[1] - start[1]) * t
         yaw = math.atan2(end[1] - start[1], end[0] - start[0])
+        if include_motion and actor.kind == 'pedestrian':
+            lateral = (
+                actor.sway_amplitude * math.sin(self.sim_time * actor.sway_rate + actor.sway_phase)
+                + 0.025 * math.sin(self.sim_time * (actor.sway_rate * 2.7) + actor.sway_phase * 0.41)
+            )
+            normal_x = -math.sin(yaw)
+            normal_y = math.cos(yaw)
+            x += normal_x * lateral
+            y += normal_y * lateral
         return x, y, yaw
+
+    def _actor_z(self, actor: MovingActor) -> float:
+        if actor.kind != 'pedestrian':
+            return actor.height / 2.0
+        bob = actor.bob_amplitude * math.sin(self.sim_time * actor.sway_rate * 2.0 + actor.sway_phase)
+        return actor.height / 2.0 + bob
 
     @staticmethod
     def _pose(x: float, y: float, z: float, yaw: float) -> Pose:
@@ -220,7 +306,7 @@ def main(args: Sequence[str] | None = None) -> None:
     node = ActorManager()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

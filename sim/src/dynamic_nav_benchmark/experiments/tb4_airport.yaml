@@ -5,7 +5,7 @@ robot: tb4_standard
 seed: 22
 crowd_density: medium
 dynamic_obstacles: true
-robot_start: {x: -14.0, y: -5.5, yaw: 0.0}
+robot_start: {x: 2.5, y: -3.2, yaw: 0.0}
 goals:
   - {name: security_entry, x: -3.0, y: -1.0, yaw: 0.0}
 timeout_s: 180

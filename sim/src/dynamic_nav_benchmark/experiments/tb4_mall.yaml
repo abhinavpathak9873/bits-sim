@@ -5,7 +5,7 @@ robot: tb4_standard
 seed: 21
 crowd_density: medium
 dynamic_obstacles: true
-robot_start: {x: -11.5, y: -7.0, yaw: 0.0}
+robot_start: {x: 0.0, y: -3.4, yaw: 1.57}
 goals:
   - {name: atrium_info, x: 0.0, y: 0.0, yaw: 0.0}
 timeout_s: 180

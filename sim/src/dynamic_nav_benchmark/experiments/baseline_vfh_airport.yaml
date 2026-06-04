@@ -1,9 +1,9 @@
-run_id: tb3_airport_example
+run_id: baseline_vfh_airport
 world: airport
 backend: classic
 robot: tb3_waffle_pi
-seed: 12
-crowd_density: medium
+seed: 32
+crowd_density: low
 dynamic_obstacles: true
 robot_start: {x: 2.5, y: -3.2, yaw: 0.0}
 goals:
@@ -14,4 +14,5 @@ scan_topic: /scan
 odom_topic: /odom
 cmd_vel_topic: /cmd_vel
 goal_topic: /goal_pose
-algorithm_launch: ros2 launch dynamic_nav_benchmark dummy_algorithm.launch.py
+algorithm_launch: ros2 launch dynamic_nav_benchmark baseline_vfh.launch.py
+record: false

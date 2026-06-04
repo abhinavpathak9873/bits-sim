@@ -16,6 +16,28 @@ ros2 launch dynamic_nav_bringup benchmark.launch.py \
   backend:=classic world:=mall robot:=tb3_waffle_pi gui:=false
 ```
 
+Run an included baseline:
+
+```bash
+ros2 launch dynamic_nav_bringup benchmark.launch.py \
+  experiment:=/sim/src/dynamic_nav_benchmark/experiments/baseline_vfh_mall.yaml \
+  backend:=classic world:=mall robot:=tb3_waffle_pi gui:=false
+```
+
+Baseline configs:
+
+- `baseline_go_to_goal_mall.yaml`
+- `baseline_bug2_mall.yaml`
+- `baseline_vfh_mall.yaml`
+- `baseline_follow_gap_mall.yaml`
+- `baseline_astar_mall.yaml`
+- `baseline_vfh_airport.yaml`
+- `baseline_astar_airport.yaml`
+
+For fair comparison with your own algorithm, copy a baseline config and replace
+only `algorithm_launch`. Keep `world`, `seed`, `crowd_density`, `robot`,
+`robot_start`, and `goals` unchanged.
+
 Artifacts are written to `results/<run_id>`:
 
 - `summary.json`
