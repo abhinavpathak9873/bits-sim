@@ -1,0 +1,17 @@
+run_id: tb4_airport_example
+world: airport
+backend: ignition
+robot: tb4_standard
+seed: 22
+crowd_density: medium
+dynamic_obstacles: true
+robot_start: {x: -14.0, y: -5.5, yaw: 0.0}
+goals:
+  - {name: security_entry, x: -3.0, y: -1.0, yaw: 0.0}
+timeout_s: 180
+goal_tolerance_m: 0.45
+scan_topic: /scan
+odom_topic: /odom
+cmd_vel_topic: /cmd_vel
+goal_topic: /goal_pose
+algorithm_launch: ros2 launch dynamic_nav_benchmark dummy_algorithm.launch.py

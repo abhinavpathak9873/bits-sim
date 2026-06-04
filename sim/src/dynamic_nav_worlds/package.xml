@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>dynamic_nav_worlds</name>
+  <version>0.1.0</version>
+  <description>Configurable mall and airport worlds for dynamic navigation benchmarking.</description>
+  <maintainer email="research@example.com">Dynamic Nav Research Team</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/models" gazebo_media_path="${prefix}/textures"/>
+  </export>
+</package>

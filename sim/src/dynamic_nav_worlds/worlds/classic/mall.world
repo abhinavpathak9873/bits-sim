@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="dynamic_nav_mall">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <scene><ambient>0.58 0.58 0.62 1</ambient><background>0.88 0.9 0.94 1</background></scene>
+    <physics type="ode"><max_step_size>0.0025</max_step_size><real_time_update_rate>400</real_time_update_rate></physics>
+
+    <model name="mall_floor">
+      <static>true</static>
+      <link name="floor">
+        <visual name="polished_tile"><geometry><box><size>30 22 0.03</size></box></geometry><material><ambient>0.72 0.74 0.72 1</ambient><diffuse>0.82 0.84 0.82 1</diffuse></material></visual>
+        <collision name="collision"><geometry><box><size>30 22 0.03</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="mall_shell">
+      <static>true</static>
+      <link name="walls">
+        <visual name="north"><pose>0 11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry><material><diffuse>0.45 0.48 0.52 1</diffuse></material></visual>
+        <collision name="north_col"><pose>0 11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></collision>
+        <visual name="south"><pose>0 -11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry><material><diffuse>0.45 0.48 0.52 1</diffuse></material></visual>
+        <collision name="south_col"><pose>0 -11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></collision>
+        <visual name="east"><pose>15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry><material><diffuse>0.45 0.48 0.52 1</diffuse></material></visual>
+        <collision name="east_col"><pose>15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></collision>
+        <visual name="west"><pose>-15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry><material><diffuse>0.45 0.48 0.52 1</diffuse></material></visual>
+        <collision name="west_col"><pose>-15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="storefronts_and_clutter">
+      <static>true</static>
+      <link name="fixtures">
+        <visual name="shop_north_west"><pose>-8.5 9.1 1.0 0 0 0</pose><geometry><box><size>5.0 1.4 2.0</size></box></geometry><material><diffuse>0.22 0.33 0.44 1</diffuse></material></visual>
+        <collision name="shop_north_west_col"><pose>-8.5 9.1 1.0 0 0 0</pose><geometry><box><size>5.0 1.4 2.0</size></box></geometry></collision>
+        <visual name="shop_north_east"><pose>8.5 9.1 1.0 0 0 0</pose><geometry><box><size>5.0 1.4 2.0</size></box></geometry><material><diffuse>0.44 0.25 0.28 1</diffuse></material></visual>
+        <collision name="shop_north_east_col"><pose>8.5 9.1 1.0 0 0 0</pose><geometry><box><size>5.0 1.4 2.0</size></box></geometry></collision>
+        <visual name="food_court"><pose>10.0 -8.8 0.45 0 0 0</pose><geometry><box><size>6.0 1.5 0.9</size></box></geometry><material><diffuse>0.55 0.42 0.22 1</diffuse></material></visual>
+        <collision name="food_court_col"><pose>10.0 -8.8 0.45 0 0 0</pose><geometry><box><size>6.0 1.5 0.9</size></box></geometry></collision>
+        <visual name="kiosk_a"><pose>-4.2 -2.8 0.55 0 0 0</pose><geometry><box><size>1.4 2.2 1.1</size></box></geometry><material><diffuse>0.82 0.68 0.28 1</diffuse></material></visual>
+        <collision name="kiosk_a_col"><pose>-4.2 -2.8 0.55 0 0 0</pose><geometry><box><size>1.4 2.2 1.1</size></box></geometry></collision>
+        <visual name="kiosk_b"><pose>4.2 2.8 0.55 0 0 0</pose><geometry><box><size>1.4 2.2 1.1</size></box></geometry><material><diffuse>0.20 0.58 0.52 1</diffuse></material></visual>
+        <collision name="kiosk_b_col"><pose>4.2 2.8 0.55 0 0 0</pose><geometry><box><size>1.4 2.2 1.1</size></box></geometry></collision>
+        <visual name="atrium"><pose>0 0 0.08 0 0 0</pose><geometry><cylinder><radius>2.2</radius><length>0.08</length></cylinder></geometry><material><diffuse>0.52 0.64 0.76 1</diffuse></material></visual>
+      </link>
+    </model>
+  </world>
+</sdf>

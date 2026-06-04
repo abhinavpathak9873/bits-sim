@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="dynamic_nav_airport">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <model name="airport_floor"><static>true</static><link name="floor"><visual name="visual"><geometry><box><size>32 20 0.03</size></box></geometry><material><diffuse>0.78 0.80 0.82 1</diffuse></material></visual><collision name="collision"><geometry><box><size>32 20 0.03</size></box></geometry></collision></link></model>
+    <model name="terminal_boundaries"><static>true</static><link name="walls">
+      <visual name="north"><pose>0 10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></visual><collision name="north_col"><pose>0 10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></collision>
+      <visual name="south"><pose>0 -10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></visual><collision name="south_col"><pose>0 -10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></collision>
+      <visual name="east"><pose>16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></visual><collision name="east_col"><pose>16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></collision>
+      <visual name="west"><pose>-16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></visual><collision name="west_col"><pose>-16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></collision>
+    </link></model>
+  </world>
+</sdf>

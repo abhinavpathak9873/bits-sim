@@ -1,0 +1,27 @@
+name: airport
+frame_id: map
+description: Airport terminal benchmark with check-in, security queue, gate seating, and luggage cart traffic.
+robot_start: {x: -14.0, y: -5.5, yaw: 0.0}
+goals:
+  - {name: security_entry, x: -3.0, y: -1.0, yaw: 0.0}
+  - {name: gate_b12, x: 12.0, y: 5.5, yaw: 1.57}
+  - {name: baggage_help, x: 8.5, y: -6.5, yaw: 3.14}
+density_profiles:
+  low: {pedestrians: 10, carts: 1}
+  medium: {pedestrians: 24, carts: 3}
+  high: {pedestrians: 44, carts: 5}
+  stress: {pedestrians: 70, carts: 8}
+pedestrian_routes:
+  - [[-15.0, -4.0], [-9.0, -4.0], [-4.0, -2.0], [2.0, 0.0], [14.0, 4.0]]
+  - [[-12.0, 7.0], [-7.0, 4.0], [-3.0, 1.0], [4.0, 1.0], [13.5, 7.0]]
+  - [[10.0, -7.5], [5.0, -5.5], [0.0, -2.5], [-5.0, -2.0], [-13.0, -1.0]]
+  - [[1.0, 8.0], [1.0, 4.0], [1.0, 0.0], [1.0, -4.0], [1.0, -8.0]]
+cart_routes:
+  - [[-14.0, -7.5], [-6.0, -7.5], [1.0, -6.5], [9.0, -6.5], [14.0, -3.0]]
+  - [[13.0, 7.5], [8.0, 5.5], [2.0, 3.5], [-5.0, 3.5], [-12.0, 5.5]]
+static_obstacles:
+  - {name: checkin_island_a, x: -10.0, y: -5.8, sx: 4.0, sy: 0.9}
+  - {name: checkin_island_b, x: -10.0, y: -2.8, sx: 4.0, sy: 0.9}
+  - {name: security_lane_a, x: -2.5, y: -0.4, sx: 0.8, sy: 3.5}
+  - {name: seating_gate_a, x: 8.0, y: 4.8, sx: 3.0, sy: 1.0}
+  - {name: seating_gate_b, x: 11.8, y: 4.8, sx: 3.0, sy: 1.0}

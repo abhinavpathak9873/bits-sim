@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="dynamic_nav_airport">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <scene><ambient>0.62 0.64 0.68 1</ambient><background>0.86 0.89 0.93 1</background></scene>
+    <physics type="ode"><max_step_size>0.0025</max_step_size><real_time_update_rate>400</real_time_update_rate></physics>
+
+    <model name="airport_floor">
+      <static>true</static>
+      <link name="floor">
+        <visual name="terminal_tile"><geometry><box><size>32 20 0.03</size></box></geometry><material><ambient>0.68 0.70 0.72 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material></visual>
+        <collision name="collision"><geometry><box><size>32 20 0.03</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="terminal_shell">
+      <static>true</static>
+      <link name="walls">
+        <visual name="north"><pose>0 10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry><material><diffuse>0.50 0.54 0.60 1</diffuse></material></visual>
+        <collision name="north_col"><pose>0 10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></collision>
+        <visual name="south"><pose>0 -10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry><material><diffuse>0.50 0.54 0.60 1</diffuse></material></visual>
+        <collision name="south_col"><pose>0 -10 1.35 0 0 0</pose><geometry><box><size>32 0.25 2.7</size></box></geometry></collision>
+        <visual name="east"><pose>16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry><material><diffuse>0.50 0.54 0.60 1</diffuse></material></visual>
+        <collision name="east_col"><pose>16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></collision>
+        <visual name="west"><pose>-16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry><material><diffuse>0.50 0.54 0.60 1</diffuse></material></visual>
+        <collision name="west_col"><pose>-16 0 1.35 0 0 0</pose><geometry><box><size>0.25 20 2.7</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="airport_fixtures">
+      <static>true</static>
+      <link name="fixtures">
+        <visual name="checkin_a"><pose>-10 -5.8 0.55 0 0 0</pose><geometry><box><size>4.0 0.9 1.1</size></box></geometry><material><diffuse>0.18 0.35 0.50 1</diffuse></material></visual>
+        <collision name="checkin_a_col"><pose>-10 -5.8 0.55 0 0 0</pose><geometry><box><size>4.0 0.9 1.1</size></box></geometry></collision>
+        <visual name="checkin_b"><pose>-10 -2.8 0.55 0 0 0</pose><geometry><box><size>4.0 0.9 1.1</size></box></geometry><material><diffuse>0.18 0.35 0.50 1</diffuse></material></visual>
+        <collision name="checkin_b_col"><pose>-10 -2.8 0.55 0 0 0</pose><geometry><box><size>4.0 0.9 1.1</size></box></geometry></collision>
+        <visual name="security_a"><pose>-2.5 -0.4 0.45 0 0 0</pose><geometry><box><size>0.8 3.5 0.9</size></box></geometry><material><diffuse>0.46 0.46 0.48 1</diffuse></material></visual>
+        <collision name="security_a_col"><pose>-2.5 -0.4 0.45 0 0 0</pose><geometry><box><size>0.8 3.5 0.9</size></box></geometry></collision>
+        <visual name="gate_seats_a"><pose>8 4.8 0.35 0 0 0</pose><geometry><box><size>3.0 1.0 0.7</size></box></geometry><material><diffuse>0.28 0.50 0.62 1</diffuse></material></visual>
+        <collision name="gate_seats_a_col"><pose>8 4.8 0.35 0 0 0</pose><geometry><box><size>3.0 1.0 0.7</size></box></geometry></collision>
+        <visual name="gate_seats_b"><pose>11.8 4.8 0.35 0 0 0</pose><geometry><box><size>3.0 1.0 0.7</size></box></geometry><material><diffuse>0.28 0.50 0.62 1</diffuse></material></visual>
+        <collision name="gate_seats_b_col"><pose>11.8 4.8 0.35 0 0 0</pose><geometry><box><size>3.0 1.0 0.7</size></box></geometry></collision>
+      </link>
+    </model>
+  </world>
+</sdf>

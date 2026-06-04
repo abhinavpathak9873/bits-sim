@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>dynamic_nav_actors</name>
+  <version>0.1.0</version>
+  <description>Dynamic obstacle spawning and deterministic actor motion for navigation benchmarks.</description>
+  <maintainer email="research@example.com">Dynamic Nav Research Team</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>dynamic_nav_worlds</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

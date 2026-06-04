@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>dynamic_nav_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files for dynamic navigation simulation backends and benchmarks.</description>
+  <maintainer email="research@example.com">Dynamic Nav Research Team</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>dynamic_nav_actors</exec_depend>
+  <exec_depend>dynamic_nav_benchmark</exec_depend>
+  <exec_depend>dynamic_nav_worlds</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_ign_gazebo</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

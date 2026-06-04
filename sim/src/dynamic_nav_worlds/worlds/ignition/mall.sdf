@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="dynamic_nav_mall">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+    <model name="mall_floor"><static>true</static><link name="floor"><visual name="visual"><geometry><box><size>30 22 0.03</size></box></geometry><material><diffuse>0.82 0.84 0.82 1</diffuse></material></visual><collision name="collision"><geometry><box><size>30 22 0.03</size></box></geometry></collision></link></model>
+    <model name="mall_boundaries"><static>true</static><link name="walls">
+      <visual name="north"><pose>0 11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></visual><collision name="north_col"><pose>0 11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></collision>
+      <visual name="south"><pose>0 -11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></visual><collision name="south_col"><pose>0 -11 1.25 0 0 0</pose><geometry><box><size>30 0.25 2.5</size></box></geometry></collision>
+      <visual name="east"><pose>15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></visual><collision name="east_col"><pose>15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></collision>
+      <visual name="west"><pose>-15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></visual><collision name="west_col"><pose>-15 0 1.25 0 0 0</pose><geometry><box><size>0.25 22 2.5</size></box></geometry></collision>
+    </link></model>
+  </world>
+</sdf>

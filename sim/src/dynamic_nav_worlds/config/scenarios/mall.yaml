@@ -1,0 +1,26 @@
+name: mall
+frame_id: map
+description: Multi-level-inspired shopping mall benchmark with atrium crossings, storefront corridors, kiosks, and food court traffic.
+robot_start: {x: -11.5, y: -7.0, yaw: 0.0}
+goals:
+  - {name: atrium_info, x: 0.0, y: 0.0, yaw: 0.0}
+  - {name: food_court, x: 10.5, y: 6.0, yaw: 1.57}
+  - {name: north_exit, x: -9.0, y: 8.0, yaw: 3.14}
+density_profiles:
+  low: {pedestrians: 8, carts: 1}
+  medium: {pedestrians: 18, carts: 2}
+  high: {pedestrians: 34, carts: 4}
+  stress: {pedestrians: 54, carts: 6}
+pedestrian_routes:
+  - [[-13.0, -1.5], [-6.0, -1.5], [0.0, 0.0], [6.0, 1.5], [13.0, 1.5]]
+  - [[-8.0, 8.0], [-3.0, 3.0], [0.0, 0.0], [4.0, -3.0], [9.0, -7.0]]
+  - [[12.0, -6.0], [7.0, -4.0], [2.0, -2.0], [-3.0, -4.0], [-11.0, -6.5]]
+  - [[-12.0, 5.5], [-4.5, 5.5], [2.0, 5.5], [9.0, 5.5]]
+cart_routes:
+  - [[-10.0, -8.0], [-2.0, -8.0], [6.0, -8.0], [11.0, -4.0], [11.0, 2.0]]
+  - [[8.0, 8.0], [3.0, 6.0], [-3.0, 6.0], [-10.0, 4.0]]
+static_obstacles:
+  - {name: kiosk_a, x: -4.2, y: -2.8, sx: 1.4, sy: 2.2}
+  - {name: kiosk_b, x: 4.2, y: 2.8, sx: 1.4, sy: 2.2}
+  - {name: planter_west, x: -7.0, y: 1.8, sx: 2.2, sy: 0.8}
+  - {name: planter_east, x: 7.0, y: -1.8, sx: 2.2, sy: 0.8}

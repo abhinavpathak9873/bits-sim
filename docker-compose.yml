@@ -1,0 +1,48 @@
+services:
+  ros2-realsense:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        WS_NAME: ${WORKSPACE_NAME}
+        CONTAINER_NAME: ${CONTAINER_NAME}
+    image: ${CONTAINER_NAME}:latest
+    container_name: ${CONTAINER_NAME}-dev
+    privileged: true
+    network_mode: host
+    stdin_open: true
+    tty: true
+    
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - ROS_DISTRO=humble
+    
+    volumes:
+      # CRITICAL: Auto-install udev rules on host (enables automatic camera detection)
+      - /etc/udev/rules.d:/etc/udev/rules.d
+      
+      # USB device access for RealSense cameras
+      - /dev:/dev
+      
+      # X11 for GUI applications (realsense-viewer, rviz2, etc.)
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      
+      # Mount your workspace for development
+      - ./${WORKSPACE_NAME}:/${WORKSPACE_NAME}
+    
+    device_cgroup_rules:
+      - 'c 81:* rmw'   # Video devices (cameras)
+      - 'c 189:* rmw'  # USB devices (RealSense)
+    
+    command: bash
+
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
